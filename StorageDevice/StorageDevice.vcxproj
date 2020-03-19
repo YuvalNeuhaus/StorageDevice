@@ -136,12 +136,14 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Lib\10.0.16299.0\km\x86;C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\km\;C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\km\crt;C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\km;$(WDKContentRoot);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Lib\10.0.16299.0\km\x86;C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\km\;C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\km\crt;C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\km;C:\Program Files (x86)\Windows Kits\10\Include\10.0.17134.0\um;$(WDKContentRoot);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Lib\10.0.16299.0\km\x86;C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\km\;C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\km\crt;C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\km;$(WDKContentRoot);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Lib\10.0.16299.0\km\x86;C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\km\;C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\km\crt;C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\km;C:\Program Files (x86)\Windows Kits\10\Include\10.0.17134.0\um;$(WDKContentRoot);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -149,6 +151,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="StorageDevice.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="FAT32Sectors.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
