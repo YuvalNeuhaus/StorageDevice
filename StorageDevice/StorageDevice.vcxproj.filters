@@ -22,5 +22,34 @@
     <ClCompile Include="StorageDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="deviceControl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="common.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="globals.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="macros.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="declarations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StorageDevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="deviceControl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="globals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

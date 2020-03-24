@@ -1,54 +1,9 @@
-#include <wdm.h>
-#include <classpnp.h>
-#include <initguid.h>
-#include <mountdev.h>
-
-EXTERN_C
-NTSTATUS ObQueryNameString(
-	PVOID                    Object,
-	POBJECT_NAME_INFORMATION ObjectNameInfo,
-	ULONG                    Length,
-	PULONG                   ReturnLength
-);
-
-EXTERN_C
-NTSTATUS IoReportDetectedDevice(
-	PDRIVER_OBJECT                 DriverObject,
-	INTERFACE_TYPE                 LegacyBusType,
-	ULONG                          BusNumber,
-	ULONG                          SlotNumber,
-	PCM_RESOURCE_LIST              ResourceList,
-	PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirements,
-	BOOLEAN                        ResourceAssigned,
-	PDEVICE_OBJECT                 *DeviceObject
-);
-
-#define CHECK_STATUS(retval) status=retval; \
-							 if (!NT_SUCCESS(status)) goto cleanup;
-#define TRACE(...) DbgPrintEx(DPFLTR_IHVDRIVER_ID, 0xFFFFFFFF, __VA_ARGS__)
-#define RETURN_STATUS(ret) status=ret;goto cleanup;
-#define COMPLETE_IRP_WITH_STATUS(ret) irp->IoStatus.Status=ret;RETURN_STATUS(ret);
-
-#define STORAGE_SIZE (1024*1024*50)
-#define POOL_TAG (0)
-#define DEVICE_NAME L"\\Device\\MyStorageDevice"
-#define SYMBOLIC_LINK L"\\DosDevices\\MyStorageDeviceSymLink"
-#define DEVICE_UID L"\\??\\Global\\{53f56307-b6bf-11d0-94f2-00a0c91efb8b}"
-
-PDEVICE_OBJECT g_pdo = NULL;
-PDEVICE_OBJECT g_fdo = NULL;
-PCHAR g_storage = NULL;
-
-
-void completeRequest(PDEVICE_OBJECT deviceObject, PIRP irp, PNTSTATUS status) {
-	// Complete the request only if deviceObject is the PDO
-	if (deviceObject->DeviceObjectExtension->DeviceNode != NULL || deviceObject->AttachedDevice == NULL) {
-		IoCompleteRequest(irp, IO_NO_INCREMENT);
-	} else {
-		IoSkipCurrentIrpStackLocation(irp);
-		*status = IoCallDriver(deviceObject->AttachedDevice, irp);
-	}
-}
+#include "StorageDevice.h"
+#include "macros.h"
+#include "declarations.h"
+#include "deviceControl.h"
+#include "common.h"
+#include "globals.h"
 
 void driverUnload(PDRIVER_OBJECT driverObject) {
 	UNREFERENCED_PARAMETER(driverObject);
@@ -157,88 +112,6 @@ cleanup:
 	return status;
 }
 
-NTSTATUS validateOutputBufferLength(PIRP irp, UINT64 outputBufferLen, UINT64 sizeNeeded) {
-	NTSTATUS status = STATUS_UNSUCCESSFUL;
-	if (outputBufferLen < sizeNeeded) {
-		TRACE("StorageDevice::OutputBufferLength is too small. Got %llu, expected %llu\n", outputBufferLen, sizeNeeded);
-		COMPLETE_IRP_WITH_STATUS(STATUS_BUFFER_TOO_SMALL)
-	}
-
-	RETURN_STATUS(STATUS_SUCCESS);
-
-cleanup:
-	return status;
-}
-
-NTSTATUS handleIoCtl(PDEVICE_OBJECT deviceObject, PIRP irp) {
-	UNREFERENCED_PARAMETER(deviceObject);
-	TRACE("StorageDevice::handleIoCtl\n");
-	
-	NTSTATUS status = STATUS_UNSUCCESSFUL;
-	PMOUNTDEV_NAME mntDevName = NULL;
-	PMOUNTDEV_UNIQUE_ID mntDevUID = NULL;
-	UNICODE_STRING deviceUID;
-	ULONG nameRetLen = 0;
-	POBJECT_NAME_INFORMATION objNameInfo = NULL;
-	objNameInfo = reinterpret_cast<POBJECT_NAME_INFORMATION>(ExAllocatePoolWithTag(NonPagedPool, sizeof(OBJECT_NAME_INFORMATION) + 256, POOL_TAG));
-	if (objNameInfo == NULL) {
-		TRACE("StorageDevice::ExAllocatePoolWithTag for objNameInfo failed\n");
-		COMPLETE_IRP_WITH_STATUS(STATUS_INSUFFICIENT_RESOURCES);
-	}
-
-	PIO_STACK_LOCATION stack = IoGetCurrentIrpStackLocation(irp);
-	UINT64 outputBufLen = stack->Parameters.DeviceIoControl.OutputBufferLength;
-
-	switch (stack->Parameters.DeviceIoControl.IoControlCode) {
-
-	case IOCTL_MOUNTDEV_QUERY_DEVICE_NAME:
-		TRACE("StorageDevice::Handling IOCTL_MOUNTDEV_QUERY_DEVICE_NAME\n");
-		CHECK_STATUS(ObQueryNameString(g_pdo, objNameInfo, 256, &nameRetLen));
-		mntDevName = reinterpret_cast<PMOUNTDEV_NAME>(irp->AssociatedIrp.SystemBuffer);
-		if (!NT_SUCCESS(validateOutputBufferLength(irp, outputBufLen, objNameInfo->Name.Length + sizeof(USHORT)))) {
-			if (outputBufLen >= sizeof(MOUNTDEV_NAME)) {
-				mntDevName->NameLength = objNameInfo->Name.Length;
-				irp->IoStatus.Information = sizeof(MOUNTDEV_NAME);
-				COMPLETE_IRP_WITH_STATUS(STATUS_BUFFER_OVERFLOW);
-			} else {
-				COMPLETE_IRP_WITH_STATUS(STATUS_INVALID_PARAMETER);
-			}
-		}
-		RtlCopyBytes((PCHAR)mntDevName->Name, objNameInfo->Name.Buffer, objNameInfo->Name.Length);
-		mntDevName->NameLength = objNameInfo->Name.Length;
-		irp->IoStatus.Information = objNameInfo->Name.Length + sizeof(USHORT);
-		break;
-
-	case IOCTL_MOUNTDEV_QUERY_UNIQUE_ID:
-		TRACE("StorageDevice::Handling IOCTL_MOUNTDEV_QUERY_UNIQUE_ID\n");
-		deviceUID = RTL_CONSTANT_STRING(DEVICE_UID);
-		mntDevUID = reinterpret_cast<PMOUNTDEV_UNIQUE_ID>(irp->AssociatedIrp.SystemBuffer);
-		if (!NT_SUCCESS(validateOutputBufferLength(irp, outputBufLen, deviceUID.Length + sizeof(USHORT)))) {
-			if (outputBufLen >= sizeof(MOUNTDEV_UNIQUE_ID)) {
-				mntDevUID->UniqueIdLength = deviceUID.Length + sizeof(USHORT);
-				irp->IoStatus.Information = sizeof(MOUNTDEV_UNIQUE_ID);
-				COMPLETE_IRP_WITH_STATUS(STATUS_BUFFER_OVERFLOW);
-			} else {
-				COMPLETE_IRP_WITH_STATUS(STATUS_INVALID_PARAMETER);
-			}
-		}
-		RtlCopyBytes((PCHAR)mntDevUID->UniqueId, deviceUID.Buffer, deviceUID.Length);
-		mntDevUID->UniqueIdLength = deviceUID.Length;
-		irp->IoStatus.Information = deviceUID.Length + sizeof(USHORT);
-		break;
-
-	default:
-		TRACE("StorageDevice::Handling a non supported IOCTL - %lu\n", stack->Parameters.DeviceIoControl.IoControlCode);
-		COMPLETE_IRP_WITH_STATUS(STATUS_NOT_SUPPORTED);
-	}
-
-	COMPLETE_IRP_WITH_STATUS(STATUS_SUCCESS);
-
-cleanup:
-	completeRequest(deviceObject, irp, &status);
-	return status;
-}
-
 NTSTATUS handleUnsupporeted(PDEVICE_OBJECT deviceObject, PIRP irp) {
 	UNREFERENCED_PARAMETER(deviceObject);
 	PIO_STACK_LOCATION stack = IoGetCurrentIrpStackLocation(irp);
@@ -319,4 +192,3 @@ cleanup:
 	}
 	return status;
 }
-;
