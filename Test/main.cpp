@@ -4,7 +4,7 @@
 
 int main() {
 	std::cout << "Calling CreateFile" << std::endl;
-	auto handle = CreateFileW(L"\\\\.\\MyStorageDeviceSymLink",
+	auto handle = CreateFileW(L"\\\\.\\e:",
 							  FILE_READ_ACCESS | FILE_WRITE_ACCESS,
 							  0,
 							  nullptr,
@@ -35,7 +35,7 @@ int main() {
 	}
 
 	std::cout << "Calling CreateFile" << std::endl;
-	auto handle2 = CreateFileW(L"\\\\.\\MyStorageDeviceSymLink",
+	auto handle2 = CreateFileW(L"\\\\.\\e:",
 							  FILE_READ_ACCESS | FILE_WRITE_ACCESS,
 							  0,
 							  nullptr,
