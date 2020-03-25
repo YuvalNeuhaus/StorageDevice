@@ -14,7 +14,7 @@ NTSTATUS validateOutputBufferLength(PIRP irp, UINT64 outputBufferLen, UINT64 siz
 	NTSTATUS status = STATUS_UNSUCCESSFUL;
 	if (outputBufferLen < sizeNeeded) {
 		TRACE("StorageDevice::OutputBufferLength is too small. Got %llu, expected %llu\n", outputBufferLen, sizeNeeded);
-		COMPLETE_IRP_WITH_STATUS(STATUS_BUFFER_TOO_SMALL)
+		COMPLETE_IRP_WITH_STATUS(STATUS_BUFFER_OVERFLOW);
 	}
 
 	RETURN_STATUS(STATUS_SUCCESS);
