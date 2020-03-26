@@ -2,13 +2,12 @@
 #include <ntddk.h>
 #include "StorageDevice.h"
 #include "macros.h"
-#include "declarations.h"
 #include "deviceControl.h"
 #include "common.h"
 #include "globals.h"
 
 DEFINE_GUID(GUID_DEVINTERFACE_DISK, 0x53f56307L, 0xb6bf, 0x11d0, 0x94, 0xf2, 0x00, 0xa0, 0xc9, 0x1e, 0xfb, 0x8b);
-
+DEFINE_GUID(GUID_DEVINTERFACE_VOLUME, 0x53f5630dL, 0xb6bf, 0x11d0, 0x94, 0xf2, 0x00, 0xa0, 0xc9, 0x1e, 0xfb, 0x8b);
 
 void driverUnload(PDRIVER_OBJECT driverObject) {
 	UNREFERENCED_PARAMETER(driverObject);
@@ -311,7 +310,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driverObject, PUNICODE_STRING) {
 	UNICODE_STRING deviceName = RTL_CONSTANT_STRING(DEVICE_NAME);
 	UNICODE_STRING deviceSymLink = RTL_CONSTANT_STRING(SYMBOLIC_LINK);
 	UNICODE_STRING interfaceSymLink;
-	UNICODE_STRING interfaceSymLink2;
+	//UNICODE_STRING interfaceSymLink2;
 	PDEVICE_OBJECT attachedDevice = NULL;
 
 	for (UINT32 i = 0; i < IRP_MJ_MAXIMUM_FUNCTION; i++) {
@@ -323,10 +322,12 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driverObject, PUNICODE_STRING) {
 	driverObject->MajorFunction[IRP_MJ_CREATE] = completeOrPassToLower;
 	driverObject->MajorFunction[IRP_MJ_CLOSE] = completeOrPassToLower;
 	driverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = handleIoCtl;
-	/*driverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = handleQueryInfo;*/
+	driverObject->MajorFunction[IRP_MJ_CLEANUP] = completeOrPassToLower;
+
+	//driverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = handleQueryInfo;
 	driverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] = handleDirCtrl;
-	/*driverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = handleQueryVolInfo;
-	driverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = handleFSCtrl;*/
+	//driverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = handleQueryVolInfo;
+	//driverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = handleFSCtrl;
 
 	// Create to storage memory
 	g_storage = reinterpret_cast<PCHAR>(ExAllocatePoolWithTag(NonPagedPool, STORAGE_SIZE, POOL_TAG));
@@ -366,8 +367,8 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driverObject, PUNICODE_STRING) {
 	}
 
 	// Register to the GUID_DEVINTERFACE_DISK interface
-	CHECK_STATUS(IoRegisterDeviceInterface(g_pdo, &GUID_DEVINTERFACE_DISK, NULL, &interfaceSymLink2));
-	CHECK_STATUS(IoSetDeviceInterfaceState(&interfaceSymLink2, TRUE));
+	/*CHECK_STATUS(IoRegisterDeviceInterface(g_pdo, &GUID_DEVINTERFACE_DISK, NULL, &interfaceSymLink2));
+	CHECK_STATUS(IoSetDeviceInterfaceState(&interfaceSymLink2, TRUE));*/
 
 	// Register to the MOUNTDEV_MOUNTED_DEVICE_GUID interface
 	CHECK_STATUS(IoRegisterDeviceInterface(g_pdo, &MOUNTDEV_MOUNTED_DEVICE_GUID, NULL, &interfaceSymLink));
@@ -379,9 +380,9 @@ cleanup:
 	if (interfaceSymLink.Buffer != NULL) {
 		RtlFreeUnicodeString(&interfaceSymLink);
 	}
-	if (interfaceSymLink2.Buffer != NULL) {
+	/*if (interfaceSymLink2.Buffer != NULL) {
 		RtlFreeUnicodeString(&interfaceSymLink2);
-	}
+	}*/
 
 	if (!NT_SUCCESS(status)) {
 		TRACE("StorageDevice::DriverEntry failed with status %lu\n", status);
