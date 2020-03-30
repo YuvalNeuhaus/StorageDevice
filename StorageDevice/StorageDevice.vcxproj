@@ -142,7 +142,7 @@
       <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(DDK_LIB_PATH)classpnp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(DDK_LIB_PATH)classpnp.lib;$(DDK_LIB_PATH)Wdmsec.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
@@ -152,7 +152,7 @@
       <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(DDK_LIB_PATH)classpnp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(DDK_LIB_PATH)classpnp.lib;$(DDK_LIB_PATH)Wdmsec.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
@@ -162,12 +162,14 @@
   <ItemGroup>
     <ClCompile Include="common.cpp" />
     <ClCompile Include="deviceControl.cpp" />
+    <ClCompile Include="dispatchRoutines.cpp" />
     <ClCompile Include="globals.cpp" />
     <ClCompile Include="StorageDevice.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
     <ClInclude Include="deviceControl.h" />
+    <ClInclude Include="dispatchRoutines.h" />
     <ClInclude Include="globals.h" />
     <ClInclude Include="macros.h" />
     <ClInclude Include="StorageDevice.h" />
