@@ -238,3 +238,14 @@ cleanup:
 	IoCompleteRequest(irp, IO_NO_INCREMENT);
 	return status;
 }
+
+NTSTATUS handlePower(PDEVICE_OBJECT deviceObject, PIRP irp) {
+	UNREFERENCED_PARAMETER(deviceObject);
+	TRACE_FUNC;
+	NTSTATUS status = STATUS_SUCCESS;
+	COMPLETE_IRP_WITH_STATUS(STATUS_SUCCESS);
+
+	cleanup:
+	IoCompleteRequest(irp, IO_NO_INCREMENT);
+	return status;
+}

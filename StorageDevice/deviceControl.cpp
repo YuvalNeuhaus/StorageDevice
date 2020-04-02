@@ -19,7 +19,6 @@ NTSTATUS handleIoCtl(PDEVICE_OBJECT deviceObject, PIRP irp) {
 	TRACE("StorageDevice::handleIoCtl\n");
 
 	NTSTATUS status = STATUS_UNSUCCESSFUL;
-	PDEVICE_MANAGE_DATA_SET_ATTRIBUTES devManageDataSetAttr = NULL;
 	PPARTITION_INFORMATION_EX partInfo = NULL;
 	PSTORAGE_DEVICE_DESCRIPTOR storageDevDescriptor = NULL;
 	PSTORAGE_PROPERTY_QUERY propQuery = NULL;
@@ -28,7 +27,7 @@ NTSTATUS handleIoCtl(PDEVICE_OBJECT deviceObject, PIRP irp) {
 	PVOLUME_GET_GPT_ATTRIBUTES_INFORMATION gptInfo = NULL;
 	PGET_DISK_ATTRIBUTES diskAttributes = NULL;
 	PDISK_GEOMETRY diskGeo = NULL;
-	PDISK_GEOMETRY_EX diskGeoEx = NULL;
+	//PDISK_GEOMETRY_EX diskGeoEx = NULL;
 	PGET_MEDIA_TYPES mediaTypes = NULL;
 	PSTORAGE_DEVICE_NUMBER storDevNum = NULL;
 	PVOLUME_DISK_EXTENTS volDiskEx = NULL;
@@ -96,7 +95,7 @@ NTSTATUS handleIoCtl(PDEVICE_OBJECT deviceObject, PIRP irp) {
 		storDevNum = reinterpret_cast<PSTORAGE_DEVICE_NUMBER>(irp->AssociatedIrp.SystemBuffer);
 		storDevNum->DeviceNumber = 0;
 		storDevNum->DeviceType = FILE_DEVICE_DISK;
-		storDevNum->PartitionNumber = -1;
+		storDevNum->PartitionNumber = static_cast<ULONG>(-1);
 		irp->IoStatus.Information = sizeof(STORAGE_DEVICE_NUMBER);
 		break;
 
@@ -278,6 +277,14 @@ NTSTATUS handleIoCtl(PDEVICE_OBJECT deviceObject, PIRP irp) {
 
 	case IOCTL_DISK_SET_PARTITION_INFO:
 		TRACE("StorageDevice::Handling IOCTL_DISK_SET_PARTITION_INFO\n");
+		break;
+
+	case IOCTL_DISK_MEDIA_REMOVAL:
+		TRACE("StorageDevice::Handling IOCTL_DISK_MEDIA_REMOVAL\n");
+		break;
+
+	case IOCTL_STORAGE_EJECT_MEDIA:
+		TRACE("StorageDevice::Handling IOCTL_STORAGE_EJECT_MEDIA\n");
 		break;
 
 	default:

@@ -15,10 +15,14 @@ void driverUnload(PDRIVER_OBJECT driverObject) {
 	UNREFERENCED_PARAMETER(driverObject);
 	TRACE_FUNC;
 	
+	IoDetachDevice(g_pdo);
+
 	if (g_fdo != NULL) {
 		IoDeleteDevice(g_fdo);
 	}
 
+	
+	// TODO: I'm not sure that this is my responsibility to delete the PDO because the PNP manager created it in IoReportDetectedDevice
 	if (g_pdo != NULL) {
 		IoDeleteDevice(g_pdo);
 	}
@@ -53,8 +57,9 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driverObject, PUNICODE_STRING) {
 	driverObject->MajorFunction[IRP_MJ_CLEANUP] = handleCleanup;
 	driverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = handleQueryInfo;
 	driverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = handleQueryVolInfo;
+	driverObject->MajorFunction[IRP_MJ_POWER] = handlePower;
 
-	// Create to storage memory
+	// Create the storage memory
 	g_storage = reinterpret_cast<PCHAR>(ExAllocatePoolWithTag(NonPagedPool, STORAGE_SIZE, POOL_TAG));
 	if (g_storage == NULL) {
 		TRACE("StorageDevice::ExAllocatePoolWithTag for g_storage failed\n");
